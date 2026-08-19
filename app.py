@@ -30,7 +30,7 @@ def main():
         df = pd.read_excel(file)
         df = df.dropna(axis=1)
 
-        cols = [col for col in df.columns if col.startswith("Title")]
+        cols = df.columns[1:]
         min_value, max_value = df["Wave"].min(), df["Wave"].max()
 
         a1, a2 = st.columns(2)
@@ -85,7 +85,7 @@ def main():
 
         k1, k2 = st.columns(2)
         with k1:
-            st.subheader("Denoised Absorption Spectrum")
+            st.subheader("Denoised Adsooption Spectrum")
             st.dataframe(data=df_denoise, height="stretch")
         with k2:
             fig = go.Figure()
@@ -99,7 +99,7 @@ def main():
                         )
                     )
                 fig.update_layout(
-                    title={"text": "Absorption Spectrum", "font": {"size": 24}},
+                    title={"text": "Adsooption Spectrum", "font": {"size": 24}},
                     xaxis_title={"text": "Wavelength", "font": {"size": 18}},
                     yaxis_title={"text": "Absorbance", "font": {"size": 18}},
                     legend_font_size=18,
