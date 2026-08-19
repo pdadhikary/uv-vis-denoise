@@ -1,3 +1,4 @@
+from altair import value
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
@@ -85,7 +86,7 @@ def main():
 
         k1, k2 = st.columns(2)
         with k1:
-            st.subheader("Denoised Adsooption Spectrum")
+            st.subheader("Denoised Adsorption Spectrum")
             st.dataframe(data=df_denoise, height="stretch")
         with k2:
             fig = go.Figure()
@@ -99,7 +100,7 @@ def main():
                         )
                     )
                 fig.update_layout(
-                    title={"text": "Adsooption Spectrum", "font": {"size": 24}},
+                    title={"text": "Adsorption Spectrum", "font": {"size": 24}},
                     xaxis_title={"text": "Wavelength", "font": {"size": 18}},
                     yaxis_title={"text": "Absorbance", "font": {"size": 18}},
                     legend_font_size=18,
@@ -115,12 +116,20 @@ def main():
 
         k3, k4 = st.columns(2)
         with k3:
-            st.subheader("Absorption over Time Data")
+            st.subheader("Adsorption and Concentration over Time Data")
+            t1, t2 = st.columns(2)
+            with t1:
+                epsilon = st.number_input(label="Molar Absorvity (Epsilon)", min_value=0.0, value=100.0, step=0.5)
+            with t2:
+                path_length = st.number_input(label="Path Length (cm)", min_value=0.0, value=1.0, step=0.1)
+
+            band_df["Concentration"] = band_df["Absorbance"] / (epsilon * path_length)
             edited_band_df = st.data_editor(data=band_df, height="stretch")
 
         with k4:
+            selected_col = st.pills(label="Plot Type", options=["Absorbance", "Concentration"], required=True, selection_mode="single", default="Absorbance")
             popt, _ = curve_fit(
-                exp_decay, edited_band_df["Time"], edited_band_df["Absorbance"]
+                exp_decay, edited_band_df["Time"], edited_band_df[selected_col]
             )
             fitted_x = np.linspace(
                 edited_band_df["Time"].min(), edited_band_df["Time"].max(), 50
@@ -131,9 +140,9 @@ def main():
             fig.add_trace(
                 go.Scatter(
                     x=edited_band_df["Time"],
-                    y=edited_band_df["Absorbance"],
+                    y=edited_band_df[selected_col],
                     mode="markers",
-                    name="Observed Absorbance",
+                    name=f"Observed {selected_col}",
                     marker={"size": 10},
                 )
             )
@@ -147,11 +156,11 @@ def main():
             )
             fig.update_layout(
                 title={
-                    "text": f"Absorption over Time (At Wavelength={band}nm)",
+                    "text": f"{selected_col} vs Time (At Wavelength={band}nm)",
                     "font": {"size": 24},
                 },
                 xaxis_title={"text": "Time", "font": {"size": 18}},
-                yaxis_title={"text": "Absorbance", "font": {"size": 18}},
+                yaxis_title={"text": selected_col, "font": {"size": 18}},
                 legend_font_size=18,
                 height=700,
                 legend={
