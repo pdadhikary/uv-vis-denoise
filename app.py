@@ -22,7 +22,9 @@ def main():
         "Apply signal processing techniques to denoise ultraviolet-visible spectroscopy data"
     )
 
-    file = st.file_uploader(label="Upload UV-Vis Excel File")
+    file = st.file_uploader(
+        label="Upload UV-Vis Excel File", type=[".xlsx", ".xls", ".csv"]
+    )
 
     if not file:
         st.write(
@@ -46,7 +48,12 @@ def main():
         st.dataframe(data=example_df)
 
     else:
-        df = pd.read_excel(file)
+        if file.name.endswith(".xlsx") or file.name.endswith(".xls"):
+            df = pd.read_excel(file)
+        elif file.name.endswith(".csv"):
+            df = pd.read_csv(file)
+        else:
+            raise ValueError("Invalied file uploaded")
         df = df.dropna(axis=1)
         wave_col = df.columns[0]
         cols = df.columns[1:]
