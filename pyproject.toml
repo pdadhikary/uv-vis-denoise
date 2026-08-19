@@ -1,0 +1,17 @@
+[project]
+name = "uv-vis-denoise"
+version = "0.1.0"
+description = "Apply signal processing techniques to denoise ultraviolet-visible spectroscopy data"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "openpyxl>=3.1.5",
+    "pandas>=3.0.5",
+    "plotly>=6.9.0",
+    "scipy>=1.18.0",
+    "streamlit>=1.61.1",
+]
+
+[tool.ty.environment]
+python = ".venv"
+
