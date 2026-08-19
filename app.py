@@ -1,4 +1,3 @@
-from altair import value
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
@@ -26,13 +25,32 @@ def main():
     file = st.file_uploader(label="Upload UV-Vis Excel File")
 
     if not file:
-        st.write("Please upload a UV-Vis Excel file to continue.")
+        st.write(
+            "Please upload a UV-Vis Excel file to continue.\n\n"
+            "The UV-Vis data should be in columnar format where the first column "
+            "is Wavelength and subsequent columns contain Absorbance data measured "
+            "at that specific wavelength. Below is an example of what this program "
+            "expects. \n\n"
+            "**Note: the column headers are arbitrary, you can name them anything you wish.**"
+        )
+
+        example_df = pd.DataFrame(
+            {
+                "wavelength": np.arange(450, 530),
+                "Series 1": np.linspace(0.1, 0.6, 80),
+                "Series 2": np.linspace(0.05, 0.3, 80),
+                "Series N": np.linspace(0.5, 1.4, 80),
+            }
+        )
+
+        st.dataframe(data=example_df)
+
     else:
         df = pd.read_excel(file)
         df = df.dropna(axis=1)
-
+        wave_col = df.columns[0]
         cols = df.columns[1:]
-        min_value, max_value = df["Wave"].min(), df["Wave"].max()
+        min_value, max_value = df[wave_col].min(), df[wave_col].max()
 
         a1, a2 = st.columns(2)
 
@@ -65,7 +83,7 @@ def main():
                 step=1,
             )
 
-        df = df[(df["Wave"] >= start_wavelength) & (df["Wave"] <= end_wavelength)]
+        df = df[(df[wave_col] >= start_wavelength) & (df[wave_col] <= end_wavelength)]
 
         df_denoise = df.copy()
 
@@ -78,7 +96,7 @@ def main():
 
         show_real = st.checkbox(label="Show Real Data", value=True)
 
-        band_df = df_denoise.loc[df["Wave"] == band]
+        band_df = df_denoise.loc[df[wave_col] == band]
         band_values = band_df.values[0][1:]
         band_df = pd.DataFrame(
             {"Time": np.arange(len(band_values)), "Absorbance": band_values}
@@ -92,11 +110,11 @@ def main():
             fig = go.Figure()
             fig.update_layout({"uirevision": "foo"}, overwrite=True)
             for col in cols:
-                fig.add_trace(go.Scatter(x=df["Wave"], y=df_denoise[col], name=col))
+                fig.add_trace(go.Scatter(x=df[wave_col], y=df_denoise[col], name=col))
                 if show_real:
                     fig.add_trace(
                         go.Scatter(
-                            x=df["Wave"], y=df[col], mode="markers", showlegend=False
+                            x=df[wave_col], y=df[col], mode="markers", showlegend=False
                         )
                     )
                 fig.update_layout(
@@ -119,15 +137,32 @@ def main():
             st.subheader("Adsorption and Concentration over Time Data")
             t1, t2 = st.columns(2)
             with t1:
-                epsilon = st.number_input(label="Molar Absorvity (Epsilon)", min_value=0.0, value=100.0, step=0.5)
+                epsilon = st.number_input(
+                    label="Molar Absorvity (Epsilon)",
+                    min_value=0.0,
+                    value=100.0,
+                    step=0.5,
+                )
             with t2:
-                path_length = st.number_input(label="Path Length (cm)", min_value=0.0, value=1.0, step=0.1)
+                path_length = st.number_input(
+                    label="Path Length (cm)", min_value=0.0, value=1.0, step=0.1
+                )
 
             band_df["Concentration"] = band_df["Absorbance"] / (epsilon * path_length)
+
+            st.write(
+                "The table below is *EDITABLE*, you may use want to edit the Time columnn."
+            )
             edited_band_df = st.data_editor(data=band_df, height="stretch")
 
         with k4:
-            selected_col = st.pills(label="Plot Type", options=["Absorbance", "Concentration"], required=True, selection_mode="single", default="Absorbance")
+            selected_col = st.pills(
+                label="Plot Type",
+                options=["Absorbance", "Concentration"],
+                required=True,
+                selection_mode="single",
+                default="Absorbance",
+            )
             popt, _ = curve_fit(
                 exp_decay, edited_band_df["Time"], edited_band_df[selected_col]
             )
