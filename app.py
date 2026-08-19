@@ -23,12 +23,12 @@ def main():
     )
 
     file = st.file_uploader(
-        label="Upload UV-Vis Excel File", type=[".xlsx", ".xls", ".csv"]
+        label="Upload UV-Vis Data File", type=[".xlsx", ".xls", ".csv"]
     )
 
     if not file:
         st.write(
-            "Please upload a UV-Vis Excel file to continue.\n\n"
+            "Please upload a UV-Vis Excel/CSV file to continue.\n\n"
             "The UV-Vis data should be in columnar format where the first column "
             "is Wavelength and subsequent columns contain Absorbance data measured "
             "at that specific wavelength. Below is an example of what this program "
