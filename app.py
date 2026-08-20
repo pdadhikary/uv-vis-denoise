@@ -170,49 +170,58 @@ def main():
                 selection_mode="single",
                 default="Absorbance",
             )
-            popt, _ = curve_fit(
-                exp_decay, edited_band_df["Time"], edited_band_df[selected_col]
-            )
-            fitted_x = np.linspace(
-                edited_band_df["Time"].min(), edited_band_df["Time"].max(), 50
-            )
-            fitted_line = exp_decay(fitted_x, *popt)
             fig = go.Figure()
             fig.update_layout({"uirevision": "foo"}, overwrite=True)
-            fig.add_trace(
-                go.Scatter(
-                    x=edited_band_df["Time"],
-                    y=edited_band_df[selected_col],
-                    mode="markers",
-                    name=f"Observed {selected_col}",
-                    marker={"size": 10},
+            try:
+                popt, _ = curve_fit(
+                    exp_decay, edited_band_df["Time"], edited_band_df[selected_col]
                 )
-            )
-            fig.add_trace(
-                go.Scatter(
-                    x=fitted_x,
-                    y=fitted_line,
-                    mode="lines",
-                    showlegend=False,
+            except RuntimeError:
+                st.warning(
+                    "Optimal Parameters we not found. Exponential-decay function could not model the data. Try editing the **Time** column to add suitable timings."
                 )
-            )
-            fig.update_layout(
-                title={
-                    "text": f"{selected_col} vs Time (At Wavelength={band}nm)",
-                    "font": {"size": 24},
-                },
-                xaxis_title={"text": "Time", "font": {"size": 18}},
-                yaxis_title={"text": selected_col, "font": {"size": 18}},
-                legend_font_size=18,
-                height=700,
-                legend={
-                    "x": 0.85,
-                    "y": 0.95,
-                    "xanchor": "left",
-                    "yanchor": "top",
-                },
-            )
-            st.plotly_chart(fig, key="fitted_chart")
+            else:
+                fitted_x = np.linspace(
+                    edited_band_df["Time"].min(), edited_band_df["Time"].max(), 50
+                )
+                fitted_line = exp_decay(fitted_x, *popt)
+                fig.add_trace(
+                    go.Scatter(
+                        x=fitted_x,
+                        y=fitted_line,
+                        mode="lines",
+                        showlegend=False,
+                    )
+                )
+                fig.update_layout(
+                    legend={
+                        "x": 0.85,
+                        "y": 0.95,
+                        "xanchor": "left",
+                        "yanchor": "top",
+                    },
+                )
+            finally:
+                fig.add_trace(
+                    go.Scatter(
+                        x=edited_band_df["Time"],
+                        y=edited_band_df[selected_col],
+                        mode="markers",
+                        name=f"Observed {selected_col}",
+                        marker={"size": 10},
+                    )
+                )
+                fig.update_layout(
+                    title={
+                        "text": f"{selected_col} vs Time (At Wavelength={band}nm)",
+                        "font": {"size": 24},
+                    },
+                    xaxis_title={"text": "Time", "font": {"size": 18}},
+                    yaxis_title={"text": selected_col, "font": {"size": 18}},
+                    legend_font_size=18,
+                    height=700,
+                )
+                st.plotly_chart(fig, key="fitted_chart")
 
 
 if __name__ == "__main__":
